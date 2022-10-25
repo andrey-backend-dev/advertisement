@@ -1,0 +1,166 @@
+DROP SCHEMA IF EXISTS `AdvertisementDB`;
+
+CREATE SCHEMA `AdvertisementDB` DEFAULT CHARACTER SET utf8 ;
+
+USE `AdvertisementDB` ;
+
+CREATE TABLE `User` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(45) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `status` ENUM("BLOCKED", "ALIVE") NOT NULL DEFAULT 'ALIVE',
+  `name` VARCHAR(45) NULL,
+  `phone` VARCHAR(45) NULL,
+  `email` VARCHAR(45) NOT NULL,
+  `registered_since` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `about` VARCHAR(500) NULL,
+  `money` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,
+  UNIQUE INDEX `phone_UNIQUE` (`phone` ASC) VISIBLE,
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Advertisement` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
+  `status` ENUM("BLOCKED", "ALIVE") NOT NULL DEFAULT 'ALIVE',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `about` VARCHAR(2000) NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user_id_idx` (`user_id` ASC) VISIBLE,
+    FOREIGN KEY (`user_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `AdvertisementRating` (
+  `id` INT UNSIGNED NOT NULL,
+  `value` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `promoted_value` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `payment_period` DATETIME NULL,
+  PRIMARY KEY (`id`),
+    FOREIGN KEY (`id`)
+    REFERENCES `Advertisement` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `AdvertisementRate` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `ad_id` INT UNSIGNED NOT NULL,
+  `value` SMALLINT UNSIGNED NOT NULL,
+  FOREIGN KEY (`user_id`)
+  REFERENCES `User` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`ad_id`)
+  REFERENCES `AdvertisementRating` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Product` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `cost` INT UNSIGNED NOT NULL,
+  `available` INT UNSIGNED NOT NULL,
+  `ad_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+    FOREIGN KEY (`ad_id`)
+    REFERENCES `Advertisement` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Purchase` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `purchased_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `count` INT UNSIGNED NOT NULL,
+  `purchaser_id` INT UNSIGNED NOT NULL,
+  `product_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `buyer_id_idx` (`purchaser_id` ASC) VISIBLE,
+  INDEX `product_id_idx` (`product_id` ASC) VISIBLE,
+    FOREIGN KEY (`purchaser_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+    FOREIGN KEY (`product_id`)
+    REFERENCES `Product` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Comment` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `content` VARCHAR(250) NOT NULL,
+  `added_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `user_id` INT UNSIGNED NOT NULL,
+  `ad_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user_id_idx` (`user_id` ASC) VISIBLE,
+  INDEX `ad_id_idx` (`ad_id` ASC) VISIBLE,
+    FOREIGN KEY (`user_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+    FOREIGN KEY (`ad_id`)
+    REFERENCES `Advertisement` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Role` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `User2Role` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `role_id` INT UNSIGNED NOT NULL,
+  INDEX `user_id_idx` (`user_id` ASC) VISIBLE,
+  INDEX `role_id_idx` (`role_id` ASC) VISIBLE,
+    FOREIGN KEY (`user_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+    FOREIGN KEY (`role_id`)
+    REFERENCES `Role` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+CREATE TABLE `Message` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `content` VARCHAR(1000) NOT NULL,
+  `sent_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `sender_id` INT UNSIGNED NOT NULL,
+  `receiver_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `sender_id_idx` (`sender_id` ASC) VISIBLE,
+  INDEX `receiver_id_idx` (`receiver_id` ASC) VISIBLE,
+    FOREIGN KEY (`sender_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+    FOREIGN KEY (`receiver_id`)
+    REFERENCES `User` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
